@@ -1,0 +1,75 @@
+name: 'Prepare iOS keychain'
+description: 'Install Apple certificate and provisioning profile with fastlane match'
+inputs:
+  match_git_url:
+    description: 'URL to the git repo containing all the certificates'
+    required: true
+  match_git_branch:
+    description: 'Specific git branch to use'
+    required: true  
+  match_git_ssh_key:
+    description: 'Private key to access the git repo'
+    required: true
+  app_identifier:
+    description: 'The bundle identifier of your app'
+    required: true
+  profile_type:
+    description: 'Provisioning profile type'
+    required: true
+  fastlane_team_id:
+    description: 'The ID of your Developer Portal team'
+    required: true
+  fastlane_user:
+    description: 'Your Apple ID Username'
+    required: true
+  match_password:
+    description: 'Passphrase to decrypt profiles'
+    required: true
+  verbose:
+    description: 'Print out extra information and all commands'
+    required: true
+runs:
+  using: 'composite'
+  steps:
+    - name: "Checkout match repository"
+      uses: actions/checkout@v3
+      with:
+        repository: ${{ inputs.match_git_url }}
+        ref: ${{ inputs.match_git_branch }}
+        ssh-key: ${{ inputs.match_git_ssh_key }}
+        path: match
+        fetch-depth: 1
+
+    - name: "Install certificate and profile"
+      shell: bash
+      env:
+        FASTLANE_TEAM_ID: ${{ inputs.fastlane_team_id }}
+        FASTLANE_USER: ${{ inputs.fastlane_user }}
+        MATCH_PASSWORD: ${{ inputs.match_password }}
+        MATCH_GIT_URL: ./match
+        MATCH_GIT_BRANCH: ${{ inputs.match_git_branch }}
+      run: |
+          # create variables
+          export MATCH_KEYCHAIN_NAME=app-signing.keychain
+          export MATCH_KEYCHAIN_PASSWORD=$(openssl rand -base64 32)
+          
+          KEYCHAIN_PATH=~/Library/Keychains/$MATCH_KEYCHAIN_NAME
+
+          # create temporary keychain
+          security create-keychain -p "$MATCH_KEYCHAIN_PASSWORD" $KEYCHAIN_PATH
+          security set-keychain-settings -lut 21600 $MATCH_KEYCHAIN_NAME
+          security unlock-keychain -p "$MATCH_KEYCHAIN_PASSWORD" $MATCH_KEYCHAIN_NAME
+          security default-keychain -d user -s $MATCH_KEYCHAIN_NAME
+          security list-keychains -d user -s $MATCH_KEYCHAIN_NAME
+
+          if [[ "${{ inputs.verbose }}" == "true" ]]; then
+            fastlane match --verbose ${{ inputs.profile_type }} --readonly --app_identifier "${{ inputs.app_identifier }}"
+          else
+            fastlane match ${{ inputs.profile_type }} --readonly --app_identifier "${{ inputs.app_identifier }}"
+          fi
+
+    - name: Verify Certificate and Provisioning Profile
+      shell: bash
+      run: |
+        security find-identity -v -p codesigning 
+        cat ~/Library/MobileDevice/Provisioning\ Profiles/*
