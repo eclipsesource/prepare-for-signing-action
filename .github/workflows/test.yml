@@ -1,0 +1,33 @@
+name: Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - releases/*
+
+jobs:
+  test:
+    runs-on: macos-latest
+    environment: 'EclipseSource Fastlane Match'
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install the Apple certificate and provisioning profile
+        uses: ./
+        with:
+          app_identifier: 'com.eclipsesource.*'
+          profile_type: 'development'
+          match_git_url: ${{ secrets.TABRIS_IOS_MATCH_GIT_URL }}
+          match_git_branch: ${{ secrets.TABRIS_IOS_MATCH_GIT_BRANCH }}
+          match_git_ssh_key: ${{ secrets.TABRIS_IOS_MATCH_GIT_SSH_KEY }}
+          match_password: ${{ secrets.TABRIS_IOS_MATCH_PASSWORD }}
+          fastlane_team_id: ${{ secrets.TABRIS_IOS_FASTLANE_TEAM_ID }}
+          fastlane_user: ${{ secrets.TABRIS_IOS_FASTLANE_USER }}
+
+      - name: Cleanup
+        run: |
+          rm -Rf ~/Library/Keychains/*
+          rm -Rf ~/Library/MobileDevice/Provisioning\ Profiles/*
