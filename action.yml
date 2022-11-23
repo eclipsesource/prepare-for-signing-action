@@ -71,5 +71,11 @@ runs:
     - name: Verify Certificate and Provisioning Profile
       shell: bash
       run: |
-        security find-identity -v -p codesigning 
-        cat ~/Library/MobileDevice/Provisioning\ Profiles/*
+        if [[ "${{ inputs.verbose }}" == "true" ]]; then
+          security find-identity -p codesigning 
+          ls -l ~/Library/MobileDevice/Provisioning\ Profiles/*
+          cat ~/Library/MobileDevice/Provisioning\ Profiles/*
+        else
+          security find-identity -v -p codesigning 
+          ls -l ~/Library/MobileDevice/Provisioning\ Profiles/*
+        fi
