@@ -11,7 +11,7 @@ on:
 jobs:
   test:
     runs-on: macos-latest
-    environment: 'EclipseSource Fastlane Match'
+    environment: 'es-fastlane-match'
     steps: 
       - name: Checkout
         uses: actions/checkout@v3
@@ -21,12 +21,12 @@ jobs:
         with:
           app_identifier: 'com.eclipsesource.*'
           profile_type: 'development'
-          match_git_url: ${{ secrets.TABRIS_IOS_MATCH_GIT_URL }}
-          match_git_branch: ${{ secrets.TABRIS_IOS_MATCH_GIT_BRANCH }}
+          match_git_url: ${{ env.es-fastlane-match.TABRIS_IOS_MATCH_GIT_URL }}
+          match_git_branch: ${{ env.es-fastlane-match.TABRIS_IOS_MATCH_GIT_BRANCH }}
           match_git_ssh_key: ${{ secrets.TABRIS_IOS_MATCH_GIT_SSH_KEY }}
           match_password: ${{ secrets.TABRIS_IOS_MATCH_PASSWORD }}
-          fastlane_team_id: ${{ secrets.TABRIS_IOS_FASTLANE_TEAM_ID }}
-          fastlane_user: ${{ secrets.TABRIS_IOS_FASTLANE_USER }}
+          fastlane_team_id: ${{ env.es-fastlane-match.TABRIS_IOS_FASTLANE_TEAM_ID }}
+          fastlane_user: ${{ env.es-fastlane-match.TABRIS_IOS_FASTLANE_USER }}
 
       - name: Cleanup
         run: |
